@@ -151,8 +151,18 @@ class Command(BaseCommand):
 
             print "Stopping daemon..."
             pid = int(open(pidFile).read())
-            os.kill(pid, SIGTSTP)
-
+            try:
+                os.kill(pid, SIGTSTP)
+            except OSError as exception:
+                if(exception.errno == 1): 
+                    print "You do not have permision stop jukebox"
+                    return
+                elif(exception.errno == 3):
+                    print "Process already stopped, removing PID file"
+                    os.remove(pidFile)
+                else:
+                    raise exception
+                    
             print "Unregister player " + str(pid)
             players_api = api.players()
             players_api.remove(pid)
